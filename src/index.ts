@@ -31,7 +31,7 @@ interface Config {
 
 function getConfig(): Config {
   return {
-    model: process.env.INPUT_MODEL || 'gpt-4o-mini',
+    model: process.env.INPUT_MODEL || 'gpt-5-mini',
     confidenceThreshold: parseInt(process.env.INPUT_CONFIDENCE_THRESHOLD || '80', 10),
     labelName: process.env.INPUT_LABEL_NAME || 'skip-review',
     maxDiffSize: parseInt(process.env.INPUT_MAX_DIFF_SIZE || '50000', 10),

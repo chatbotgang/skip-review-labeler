@@ -36,7 +36,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
           # Optional: customize settings
-          # model: gpt-4o-mini
+          # model: gpt-5-mini
           # confidence_threshold: 80
           # label_name: skip-review
           # add_comment: true

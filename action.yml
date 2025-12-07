@@ -20,7 +20,7 @@ inputs:
   model:
     description: 'AI model to use'
     required: false
-    default: 'gpt-4o-mini'
+    default: 'gpt-5-mini'
   confidence_threshold:
     description: 'Minimum confidence to apply label (0-100)'
     required: false

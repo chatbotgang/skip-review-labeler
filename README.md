@@ -76,7 +76,7 @@ jobs:
 |-------|-------------|----------|---------|
 | `github_token` | GitHub token for API access | Yes | - |
 | `openai_api_key` | OpenAI API key (or compatible) | Yes | - |
-| `model` | AI model to use | No | `gpt-4o-mini` |
+| `model` | AI model to use | No | `gpt-5-mini` |
 | `confidence_threshold` | Minimum confidence to apply label (0-100) | No | `80` |
 | `label_name` | Label to apply when eligible | No | `skip-review` |
 | `max_diff_size` | Maximum diff size in characters | No | `50000` |
@@ -224,7 +224,7 @@ The action supports Azure OpenAI by configuring the API endpoint:
 
 ## Cost Estimation
 
-Using `gpt-4o-mini` (default):
+Using `gpt-5-mini` (default):
 
 - Average PR diff: ~2,000 tokens input, ~200 tokens output
 - Cost per PR: ~$0.0003
