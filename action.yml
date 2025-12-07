@@ -45,6 +45,8 @@ outputs:
     description: 'AI confidence score (0-100)'
   category:
     description: 'Detected category or none'
+  reasoning:
+    description: 'AI reasoning for the decision'
 
 runs:
   using: 'composite'
@@ -80,3 +82,15 @@ runs:
         INPUT_ADD_COMMENT: ${{ inputs.add_comment }}
         GITHUB_CONTEXT: ${{ toJson(github) }}
       run: pnpm exec tsx src/index.ts
+
+    - name: Analysis Summary
+      if: always()
+      shell: bash
+      run: |
+        echo "## AI PR Analysis Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**PR Number**: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Eligible**: ${{ steps.analyze.outputs.eligible }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Confidence**: ${{ steps.analyze.outputs.confidence }}%" >> $GITHUB_STEP_SUMMARY
+        echo "**Category**: ${{ steps.analyze.outputs.category }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Reasoning**: ${{ steps.analyze.outputs.reasoning }}" >> $GITHUB_STEP_SUMMARY

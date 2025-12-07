@@ -305,6 +305,7 @@ async function main(): Promise<void> {
     setOutput('eligible', String(analysis.eligible));
     setOutput('confidence', String(analysis.confidence));
     setOutput('category', analysis.category);
+    setOutput('reasoning', analysis.reasoning);
 
     // Step 3: Apply label if eligible and confidence is high enough
     if (analysis.eligible && analysis.confidence >= config.confidenceThreshold) {
