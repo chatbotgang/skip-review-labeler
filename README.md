@@ -62,9 +62,7 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: your-org/skip-review-labeler@v1
+      - uses: chatbotgang/skip-review-labeler@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           openai_api_key: ${{ secrets.OPENAI_API_KEY }}
@@ -85,7 +83,7 @@ jobs:
 ### Example with All Options
 
 ```yaml
-- uses: your-org/skip-review-labeler@v1
+- uses: chatbotgang/skip-review-labeler@v1
   with:
     github_token: ${{ secrets.GITHUB_TOKEN }}
     openai_api_key: ${{ secrets.OPENAI_API_KEY }}
@@ -143,11 +141,14 @@ Automated formatting changes from tools like Prettier or ESLint.
 | `eligible` | Whether the PR is eligible for skip-review (`true`/`false`) |
 | `confidence` | AI confidence score (0-100) |
 | `category` | Detected category or `none` |
+| `reasoning` | AI reasoning for the decision |
+
+The action also automatically outputs a summary to `GITHUB_STEP_SUMMARY`.
 
 ### Using Outputs
 
 ```yaml
-- uses: your-org/skip-review-labeler@v1
+- uses: chatbotgang/skip-review-labeler@v1
   id: labeler
   with:
     github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -158,6 +159,7 @@ Automated formatting changes from tools like Prettier or ESLint.
     echo "Eligible: ${{ steps.labeler.outputs.eligible }}"
     echo "Confidence: ${{ steps.labeler.outputs.confidence }}%"
     echo "Category: ${{ steps.labeler.outputs.category }}"
+    echo "Reasoning: ${{ steps.labeler.outputs.reasoning }}"
 ```
 
 ## Security Considerations
@@ -214,7 +216,7 @@ If hitting OpenAI rate limits:
 The action supports Azure OpenAI by configuring the API endpoint:
 
 ```yaml
-- uses: your-org/skip-review-labeler@v1
+- uses: chatbotgang/skip-review-labeler@v1
   with:
     github_token: ${{ secrets.GITHUB_TOKEN }}
     openai_api_key: ${{ secrets.AZURE_OPENAI_KEY }}
