@@ -1,0 +1,52 @@
+# Example workflow for Skip Review Labeler
+#
+# Copy this file to .github/workflows/skip-review-labeler.yml in your repository
+
+name: AI Skip-Review Labeler
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# Prevent concurrent runs for the same PR
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  analyze-pr:
+    name: Analyze PR for Skip-Review
+    runs-on: ubuntu-latest
+
+    # Skip if PR already has the skip-review label
+    if: "!contains(github.event.pull_request.labels.*.name, 'skip-review')"
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Skip Review Labeler
+        id: labeler
+        uses: your-org/skip-review-labeler@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          openai_api_key: ${{ secrets.OPENAI_API_KEY }}
+          # Optional: customize settings
+          # model: gpt-4o-mini
+          # confidence_threshold: 80
+          # label_name: skip-review
+          # add_comment: true
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## AI PR Analysis Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**PR Number**: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Eligible**: ${{ steps.labeler.outputs.eligible }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Confidence**: ${{ steps.labeler.outputs.confidence }}%" >> $GITHUB_STEP_SUMMARY
+          echo "**Category**: ${{ steps.labeler.outputs.category }}" >> $GITHUB_STEP_SUMMARY

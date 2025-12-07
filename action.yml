@@ -1,0 +1,82 @@
+name: 'Skip Review Labeler'
+description: 'AI-powered GitHub Action that automatically labels low-risk PRs for skipping human code review'
+author: 'Your Organization'
+
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  github_token:
+    description: 'GitHub token for API access'
+    required: true
+  openai_api_key:
+    description: 'OpenAI API key (or compatible service)'
+    required: true
+  openai_base_url:
+    description: 'OpenAI API base URL (for Azure or custom endpoints)'
+    required: false
+    default: 'https://api.openai.com/v1'
+  model:
+    description: 'AI model to use'
+    required: false
+    default: 'gpt-4o-mini'
+  confidence_threshold:
+    description: 'Minimum confidence to apply label (0-100)'
+    required: false
+    default: '80'
+  label_name:
+    description: 'Label to apply when eligible'
+    required: false
+    default: 'skip-review'
+  max_diff_size:
+    description: 'Maximum diff size in characters'
+    required: false
+    default: '50000'
+  add_comment:
+    description: 'Add explanatory comment to PR'
+    required: false
+    default: 'true'
+
+outputs:
+  eligible:
+    description: 'Whether the PR is eligible for skip-review'
+  confidence:
+    description: 'AI confidence score (0-100)'
+  category:
+    description: 'Detected category or none'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install pnpm
+      uses: pnpm/action-setup@v3
+      with:
+        version: 9
+        run_install: false
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      run: pnpm install --frozen-lockfile
+
+    - name: Run analysis
+      id: analyze
+      shell: bash
+      working-directory: ${{ github.action_path }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+        OPENAI_API_KEY: ${{ inputs.openai_api_key }}
+        OPENAI_BASE_URL: ${{ inputs.openai_base_url }}
+        INPUT_MODEL: ${{ inputs.model }}
+        INPUT_CONFIDENCE_THRESHOLD: ${{ inputs.confidence_threshold }}
+        INPUT_LABEL_NAME: ${{ inputs.label_name }}
+        INPUT_MAX_DIFF_SIZE: ${{ inputs.max_diff_size }}
+        INPUT_ADD_COMMENT: ${{ inputs.add_comment }}
+        GITHUB_CONTEXT: ${{ toJson(github) }}
+      run: pnpm exec tsx src/index.ts
