@@ -1,5 +1,6 @@
 {
   "name": "skip-review-labeler",
+  "private": true,
   "version": "1.0.0",
   "description": "AI-powered GitHub Action that automatically labels low-risk PRs for skipping human code review",
   "type": "module",
