@@ -2,11 +2,7 @@
  * Skip Review Labeler - AI-Powered PR Analysis
  *
  * This script analyzes GitHub pull request changes and determines if they qualify
- * for skipping human code review based on four categories:
- * 1. Fix Typos
- * 2. Update i18n Key
- * 3. Update UI Style
- * 4. Code Formatting
+ * for skipping human code review based on `analysis-prompt.md` instructions.
  */
 
 import fs from 'node:fs';
@@ -68,7 +64,7 @@ interface DiffData {
 
 interface Analysis {
   eligible: boolean;
-  category: string;
+  category: string | string[];
   confidence: number;
   reasoning: string;
   flags?: string[];
@@ -185,10 +181,15 @@ Provide your analysis in the specified JSON format.`;
   const aiResponse = data.choices[0].message.content;
   const analysis = JSON.parse(aiResponse) as Analysis;
 
+  const isValidCategory =
+    typeof analysis.category === 'string' ||
+    (Array.isArray(analysis.category) && analysis.category.every((item) => typeof item === 'string') && analysis.category.length > 0);
+
   if (
     typeof analysis.eligible !== 'boolean' ||
     typeof analysis.confidence !== 'number' ||
-    !analysis.reasoning
+    !analysis.reasoning ||
+    !isValidCategory
   ) {
     throw new Error('Invalid AI response format');
   }
@@ -219,7 +220,7 @@ async function applySkipReviewLabel(
   if (config.addComment) {
     const commentBody = `**AI Skip-Review Analysis**
 
-**Category**: ${analysis.category}
+**Category**: ${formatCategory(analysis.category)}
 **Confidence**: ${analysis.confidence}%
 
 **Reasoning**: ${analysis.reasoning}
@@ -250,6 +251,10 @@ function setOutput(name: string, value: string): void {
   if (outputFile) {
     fs.appendFileSync(outputFile, `${name}=${value}\n`);
   }
+}
+
+function formatCategory(category: string | string[]): string {
+  return Array.isArray(category) ? category.join(', ') : category;
 }
 
 /**
@@ -297,14 +302,14 @@ async function main(): Promise<void> {
 
     console.log('\nAI Analysis Results:');
     console.log(`  Eligible: ${analysis.eligible}`);
-    console.log(`  Category: ${analysis.category}`);
+    console.log(`  Category: ${formatCategory(analysis.category)}`);
     console.log(`  Confidence: ${analysis.confidence}%`);
     console.log(`  Reasoning: ${analysis.reasoning}`);
 
     // Set outputs
     setOutput('eligible', String(analysis.eligible));
     setOutput('confidence', String(analysis.confidence));
-    setOutput('category', analysis.category);
+    setOutput('category', formatCategory(analysis.category));
     setOutput('reasoning', analysis.reasoning);
 
     // Step 3: Apply label if eligible and confidence is high enough
