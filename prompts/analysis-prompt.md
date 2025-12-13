@@ -290,18 +290,11 @@ const StyledButton = styled.button`
 
 ```typescript
 // VALID - Skip review eligible
-- if (process.env.ENABLE_LEGACY_FLOW === 'true') {
--   runLegacyFlow();
-- }
+-// Temporary shim until every client calls v2
+-app.use('/api/v1/members', legacyMembersRouter);
+ app.use('/api/v2/members', membersRouter);
 
-- export const UNUSED_FLAG = createFeatureFlag('unused_flag');
-
-- router.post('/v1/legacy-sync', legacySyncHandler);
-
-- type LegacySchema = {
--   id: string;
--   deprecatedField?: string;
-- };
+-export const UNUSED_FLAG = createFeatureFlag('legacy_upgrade_banner');
 ```
 
 **Anti-patterns (NOT unused-code removals)**:
