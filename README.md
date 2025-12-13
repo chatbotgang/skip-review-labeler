@@ -28,7 +28,7 @@ Code review is essential, but not all changes carry the same risk. Typo fixes, i
 - **Conservative by Default** - Only labels PRs with high confidence scores
 - **Transparent Decisions** - Adds explanatory comments to labeled PRs
 - **Configurable** - Customize model, threshold, label name, and more
-- **Four Categories** - Detects typo fixes, i18n updates, UI style changes, and code formatting
+- **Skip-Review Categories** - Detects typos, i18n updates, UI tweaks, formatting, unused-code cleanup, and safe dependency bumps
 
 ## How It Works
 
@@ -120,7 +120,7 @@ jobs:
 
 ## Skip-Review Categories
 
-The action identifies four types of low-risk changes:
+The action identifies the following low-risk change types:
 
 ### 1. Fix Typos
 
@@ -156,6 +156,25 @@ Automated formatting changes from tools like Prettier or ESLint.
 ```diff
 - const sum=a+b;
 + const sum = a + b;
+```
+
+### 5. Remove Unused Code
+
+Cutting deprecated endpoints, feature flags, or configs that have zero remaining callers.
+
+```diff
+-// Temporary shim until everyone hits v2
+-app.use('/api/v1/members', legacyMembersRouter);
+ app.use('/api/v2/members', membersRouter);
+```
+
+### 6. Safe Dependency Version Bump
+
+Patch or minor version updates that only touch dependency manifests or lockfiles.
+
+```diff
+-  "typescript": "5.5.4"
++  "typescript": "5.5.5"
 ```
 
 ## Outputs
