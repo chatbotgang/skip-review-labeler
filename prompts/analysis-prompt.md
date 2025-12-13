@@ -10,16 +10,17 @@ All skip-review calls must fall cleanly into one of these five categories. If a 
 
 ### 1. Fix Typos
 
-**Definition**: Changes that only correct spelling, grammar, or typographical errors in code comments, documentation, user-facing strings, or variable/function names without altering functionality.
+**Definition**: Changes that **only** correct spelling mistakes, grammar errors, or typographical errors in code comments, documentation, user-facing strings, or variable/function names without altering functionality or meaning. **This does NOT include content updates, rewording for clarity, adding new information, or changing descriptions—those are content changes that require review.**
 
 **Characteristics to detect**:
 
-- Small textual changes (usually 1-3 characters per change)
-- Changes in comments, JSDoc, README files, or markdown documentation
-- Corrections in string literals (especially in i18n files)
+- Small textual changes that fix obvious spelling/grammar mistakes (usually 1-3 characters per correction)
+- The **meaning and intent** of the text remains exactly the same before and after
+- Changes in comments, JSDoc, README files, or markdown documentation **that only fix typos**
+- Corrections in string literals (especially in i18n files) **where the meaning is unchanged**
 - Variable/function name spelling corrections that don't change logic
 - No changes to code logic, control flow, or data structures
-- Common patterns: "recieve" → "receive", "occured" → "occurred", "seperate" → "separate", "teh" → "the"
+- Common typo patterns: "recieve" → "receive", "occured" → "occurred", "seperate" → "separate", "teh" → "the"
 
 **Examples of valid typo fixes**:
 
@@ -44,6 +45,44 @@ All skip-review calls must fall cleanly into one of these five categories. If a 
 - Fixing typos in API endpoint paths (e.g., `/campagn/` → `/campaign/`) - this is a breaking change
 - Fixing typos that change business logic or validation rules
 - Renaming for consistency with naming conventions - this is refactoring
+- **Updating documentation content** - rewording sentences, adding explanations, updating instructions, or changing descriptions is NOT a typo fix, even if it's in a README or markdown file
+- Adding new sentences, paragraphs, or sections to documentation
+- Rewriting text for clarity or better understanding (even if the old text wasn't "wrong")
+- Updating outdated information (e.g., version numbers, feature descriptions, links)
+- Changing examples or sample code in documentation
+
+**Examples of documentation changes that are NOT typo fixes**:
+
+```diff
+# NOT a typo fix - renaming for convention (Request → Parameters)
+- export const CreateCampaignRequestSchema = z.object({...})
++ export const CreateCampaignParametersSchema = z.object({...})
+
+# NOT a typo fix - adding new documentation content
++ ## Error Handling Patterns
++
++ - Use the global error handling system in `handleError.ts`
++ - The `GlobalErrorHint` component automatically shows snackbar notifications
+
+# NOT a typo fix - adding new guidelines/conventions
++ - The request parameters should be named with `ParametersSchema`
++ - Don't use `.partial()` on discriminated unions
+
+# NOT a typo fix - updating existing content for clarity
+- Use carefully - Zod has some limitations
++ Use carefully - Zod has some limitations:
++ - Correct choice for mutable data structures
+
+# IS a typo fix - ONLY correcting an obvious spelling mistake
+- This project is maintaned by the team.
++ This project is maintained by the team.
+
+# IS a typo fix - ONLY correcting grammar without changing meaning
+- The user's nmae is displayed here.
++ The user's name is displayed here.
+```
+
+**Key distinction**: If the change adds NEW information, updates guidelines, changes conventions, or modifies meaning in any way - it is NOT a typo fix, even if it's in a markdown/documentation file.
 
 ---
 
