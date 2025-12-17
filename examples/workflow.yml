@@ -18,8 +18,10 @@ jobs:
     name: Analyze PR for Skip-Review
     runs-on: ubuntu-latest
 
-    # Skip if PR already has the skip-review label
-    if: "!contains(github.event.pull_request.labels.*.name, 'skip-review')"
+    # Skip if PR already labeled or opened by a bot account
+    if: |
+      \!contains(github.event.pull_request.labels.*.name, 'skip-review') &&
+      github.event.pull_request.user.type == 'User'  # Exclude bot-created PRs
 
     permissions:
       contents: read
