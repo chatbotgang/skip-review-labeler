@@ -78,8 +78,10 @@ concurrency:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    # Skip if already labeled
-    if: "!contains(github.event.pull_request.labels.*.name, 'skip-review')"
+    # Skip if already labeled or opened by a bot account
+    if: |
+      !contains(github.event.pull_request.labels.*.name, 'skip-review') &&
+      github.event.pull_request.user.type == 'User'  # Exclude bot-created PRs
 
     permissions:
       contents: read
