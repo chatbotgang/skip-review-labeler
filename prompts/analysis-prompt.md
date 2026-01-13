@@ -642,8 +642,8 @@ describe('UserService', () => {
 
 **Characteristics to detect**:
 
-- Adding new entries to dependency manifests (package.json, requirements.txt, go.mod, Cargo.toml, pom.xml, build.gradle, Gemfile)
-- Corresponding lockfile changes (package-lock.json, yarn.lock, poetry.lock, go.sum, Cargo.lock)
+- Adding new entries to dependency manifests (package.json, requirements.txt, go.mod)
+- Corresponding lockfile changes (package-lock.json, yarn.lock, poetry.lock, go.sum)
 - No source code changes that import or use the new dependency
 - New dependency is from a reputable source (well-known registry)
 
@@ -677,24 +677,6 @@ require (
     github.com/gin-gonic/gin v1.9.1
 +   github.com/stretchr/testify v1.8.4
 )
-```
-
-```toml
-# VALID - Cargo.toml - Adding new crate
-[dependencies]
-serde = "1.0"
-+ tokio = { version = "1.0", features = ["full"] }
-```
-
-```xml
-<!-- VALID - pom.xml - Adding new dependency -->
-<dependencies>
-+   <dependency>
-+       <groupId>org.apache.commons</groupId>
-+       <artifactId>commons-lang3</artifactId>
-+       <version>3.12.0</version>
-+   </dependency>
-</dependencies>
 ```
 
 **Anti-patterns (NOT valid dependency additions)**:
