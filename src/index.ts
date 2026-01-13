@@ -23,7 +23,6 @@ interface Config {
   maxDiffSize: number;
   addComment: boolean;
   openaiBaseUrl: string;
-  skipBotPrs: boolean;
 }
 
 function getConfig(): Config {
@@ -34,7 +33,6 @@ function getConfig(): Config {
     maxDiffSize: parseInt(process.env.INPUT_MAX_DIFF_SIZE || '50000', 10),
     addComment: process.env.INPUT_ADD_COMMENT !== 'false',
     openaiBaseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
-    skipBotPrs: process.env.INPUT_SKIP_BOT_PRS !== 'false',
   };
 }
 
@@ -292,8 +290,8 @@ async function main(): Promise<void> {
 
     console.log(`Analyzing PR #${prNumber} in ${owner}/${repo}`);
 
-    // Check if PR is created by a bot
-    if (config.skipBotPrs && prAuthor?.type && prAuthor.type !== 'User') {
+    // Only process PRs created by regular users (skip bots, apps, etc.)
+    if (prAuthor?.type && prAuthor.type !== 'User') {
       console.log(`Skipping analysis: PR created by ${prAuthor.type} account (${prAuthor.login})`);
       setOutput('eligible', 'false');
       setOutput('confidence', '0');

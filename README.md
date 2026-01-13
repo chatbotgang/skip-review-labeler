@@ -29,6 +29,7 @@ Code review is essential, but not all changes carry the same risk. Typo fixes, i
 - **Transparent Decisions** - Adds explanatory comments to labeled PRs
 - **Configurable** - Customize model, threshold, label name, and more
 - **Skip-Review Categories** - Detects typos, i18n updates, UI tweaks, formatting, unused-code cleanup, and safe dependency bumps
+- **User PRs Only** - Only analyzes PRs created by regular users (skips bots and apps)
 
 ## How It Works
 
@@ -103,7 +104,6 @@ jobs:
 | `label_name`           | Label to apply when eligible              | No       | `skip-review` |
 | `max_diff_size`        | Maximum diff size in characters           | No       | `50000`       |
 | `add_comment`          | Add explanatory comment to PR             | No       | `true`        |
-| `skip_bot_prs`         | Skip analysis for bot-created PRs         | No       | `true`        |
 
 ### Example with All Options
 
@@ -117,7 +117,6 @@ jobs:
     label_name: auto-merge-eligible
     max_diff_size: 100000
     add_comment: true
-    skip_bot_prs: true
 ```
 
 ## Skip-Review Categories

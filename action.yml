@@ -37,10 +37,6 @@ inputs:
     description: 'Add explanatory comment to PR'
     required: false
     default: 'true'
-  skip_bot_prs:
-    description: 'Skip analysis for bot-created PRs'
-    required: false
-    default: 'true'
 
 outputs:
   eligible:
@@ -84,7 +80,6 @@ runs:
         INPUT_LABEL_NAME: ${{ inputs.label_name }}
         INPUT_MAX_DIFF_SIZE: ${{ inputs.max_diff_size }}
         INPUT_ADD_COMMENT: ${{ inputs.add_comment }}
-        INPUT_SKIP_BOT_PRS: ${{ inputs.skip_bot_prs }}
         GITHUB_CONTEXT: ${{ toJson(github) }}
       run: pnpm exec tsx src/index.ts
 
