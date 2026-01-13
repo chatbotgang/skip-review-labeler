@@ -8,9 +8,9 @@ All skip-review calls must fall cleanly into one of these categories. If a PR bl
 
 <!--- cSpell:disable - intentional typos as examples for the AI analyzer -->
 
-### 1. Fix Typos
+### 1. Fix Typos and Rename Internal Identifiers
 
-**Definition**: Changes that **only** correct spelling mistakes, grammar errors, or typographical errors in code comments, documentation, user-facing strings, or variable/function names without altering functionality or meaning. **This does NOT include content updates, rewording for clarity, adding new information, or changing descriptions—those are content changes that require review.**
+**Definition**: Changes that **only** correct spelling mistakes, grammar errors, typographical errors, or rename internal (non-exported) identifiers for clarity in code comments, documentation, user-facing strings, or variable/function names without altering functionality or meaning. **This does NOT include content updates, rewording for clarity, adding new information, changing descriptions, or renaming public/exported APIs—those are changes that require review.**
 
 **Characteristics to detect**:
 
@@ -19,8 +19,11 @@ All skip-review calls must fall cleanly into one of these categories. If a PR bl
 - Changes in comments, JSDoc, README files, or markdown documentation **that only fix typos**
 - Corrections in string literals (especially in i18n files) **where the meaning is unchanged**
 - Variable/function name spelling corrections that don't change logic
+- Renaming internal (non-exported) variables, functions, or classes for clarity or consistency
+- The renamed identifier must be **private/internal scope only** (not part of public API)
 - No changes to code logic, control flow, or data structures
 - Common typo patterns: "recieve" → "receive", "occured" → "occurred", "seperate" → "separate", "teh" → "the"
+- Common rename patterns: `data` → `userData`, `temp` → `temporaryBuffer`, `cb` → `callback` (internal only)
 
 **Examples of valid typo fixes**:
 
@@ -37,26 +40,49 @@ All skip-review calls must fall cleanly into one of these categories. If a PR bl
 
 - README.md: "This project is maintaned by..."
 + README.md: "This project is maintained by..."
+
+// VALID - Renaming internal variable for clarity
+- const d = getUserData();
++ const userData = getUserData();
+
+// VALID - Renaming private function (not exported)
+- function proc(items) { ... }
++ function processItems(items) { ... }
+
+// VALID - Renaming internal class property
+class UserService {
+-   private db: Database;
++   private database: Database;
+}
 ```
 
-**Anti-patterns (NOT typo fixes)**:
+**Anti-patterns (NOT typo fixes or valid renames)**:
 
-- Changing variable names for clarity (e.g., `data` → `campaignData`) - this is refactoring
+- Renaming exported/public identifiers (e.g., `export function getData` → `export function fetchData`) - could break external consumers
 - Fixing typos in API endpoint paths (e.g., `/campagn/` → `/campaign/`) - this is a breaking change
+- Renaming fields in API contracts, database schemas, or config keys - this affects external systems
 - Fixing typos that change business logic or validation rules
-- Renaming for consistency with naming conventions - this is refactoring
+- Renames that change semantic meaning (e.g., `userId` → `oderId` is not just a rename)
 - **Updating documentation content** - rewording sentences, adding explanations, updating instructions, or changing descriptions is NOT a typo fix, even if it's in a README or markdown file
 - Adding new sentences, paragraphs, or sections to documentation
 - Rewriting text for clarity or better understanding (even if the old text wasn't "wrong")
 - Updating outdated information (e.g., version numbers, feature descriptions, links)
 - Changing examples or sample code in documentation
 
-**Examples of documentation changes that are NOT typo fixes**:
+**Examples of changes that are NOT typo fixes or valid renames**:
 
 ```diff
-# NOT a typo fix - renaming for convention (Request → Parameters)
+# NOT eligible - renaming exported identifier (could break consumers)
 - export const CreateCampaignRequestSchema = z.object({...})
 + export const CreateCampaignParametersSchema = z.object({...})
+
+# NOT eligible - renaming public API function
+- export function getUserById(id: string) { ... }
++ export function fetchUserById(id: string) { ... }
+
+# NOT eligible - renaming database/API field
+- { "user_id": 123 }
++ { "userId": 123 }
 
 # NOT a typo fix - adding new documentation content
 + ## Error Handling Patterns
@@ -82,7 +108,7 @@ All skip-review calls must fall cleanly into one of these categories. If a PR bl
 + The user's name is displayed here.
 ```
 
-**Key distinction**: If the change adds NEW information, updates guidelines, changes conventions, or modifies meaning in any way - it is NOT a typo fix, even if it's in a markdown/documentation file.
+**Key distinction**: If the change adds NEW information, updates guidelines, changes conventions, modifies meaning, or renames exported/public identifiers - it is NOT eligible, even if it's in a markdown/documentation file or looks like a simple rename.
 
 ---
 
@@ -396,6 +422,292 @@ const StyledButton = styled.button`
 
 ---
 
+### 7. Add API Field
+
+**Definition**: Purely additive changes to API request/response schemas that are backward-compatible. This includes adding new optional fields to existing API responses, new optional parameters to API requests, or exposing new API endpoints without modifying existing behavior.
+
+**Characteristics to detect**:
+
+- Adding new optional fields to existing API response objects
+- Adding new optional parameters to existing API request bodies or query strings
+- Exposing new API endpoints (purely additive, no changes to existing endpoints)
+- No changes to existing field types, names, or validation rules
+- New fields have sensible defaults or are optional (won't break existing clients)
+- Changes confined to DTOs, schemas, serializers, GraphQL types, or API type definitions
+- No changes to business logic, authentication, or authorization
+
+**Examples of valid API field additions**:
+
+```python
+# VALID - Python/FastAPI - Adding optional response field
+class UserResponse(BaseModel):
+    id: int
+    name: str
++   avatar_url: Optional[str] = None
++   bio: Optional[str] = None
+
+# VALID - Adding optional request parameter
+class CreateUserRequest(BaseModel):
+    name: str
+    email: str
++   phone: Optional[str] = None
+```
+
+```go
+// VALID - Go - Adding struct field with omitempty
+type User struct {
+    ID   int    `json:"id"`
+    Name string `json:"name"`
++   Bio  string `json:"bio,omitempty"`
+}
+
+// VALID - Adding new endpoint handler (no changes to existing)
++ func (h *Handler) GetUserStats(w http.ResponseWriter, r *http.Request) {
++     // new endpoint implementation
++ }
+```
+
+```typescript
+// VALID - TypeScript - Adding API response field
+interface UserResponse {
+  id: number;
+  name: string;
++ avatarUrl?: string;
++ metadata?: { createdAt: string };
+}
+
+// VALID - Adding optional query parameter
+interface GetUsersParams {
+  page: number;
+  limit: number;
++ sortBy?: 'name' | 'date';
+}
+```
+
+**Anti-patterns (NOT valid API field additions)**:
+
+- Removing or renaming existing fields (breaking change)
+- Changing field types (e.g., `string` → `number`, `int` → `string`)
+- Making optional fields required (breaking change for existing clients)
+- Modifying validation rules for existing fields
+- Adding fields with security implications (e.g., exposing internal IDs, sensitive timestamps, user PII)
+- Adding fields that require corresponding business logic changes
+- Changing API authentication or authorization behavior
+- Modifying existing endpoint paths or HTTP methods
+
+---
+
+### 8. Fix Type Hints and Lint Issues
+
+**Definition**: Changes that only add or correct type annotations, or fix static analysis warnings without altering runtime behavior. These changes improve code quality and type safety without changing what the code actually does.
+
+**Characteristics to detect**:
+
+- Adding type annotations (TypeScript, Python type hints, Java generics, Go type constraints)
+- Correcting incorrect or incomplete type declarations
+- Fixing lint warnings/errors flagged by static analysis tools (ESLint, Pylint, golangci-lint, Clippy, etc.)
+- Changes that could be automated by linting/formatting tools
+- No runtime behavior changes - only compile-time or static analysis improvements
+- Adding or updating type imports
+
+**Examples of valid type hint and lint fixes**:
+
+```python
+# VALID - Python - Adding type hints
+- def process_data(items, callback):
+-     for item in items:
+-         callback(item)
++ def process_data(items: list[dict], callback: Callable[[dict], None]) -> None:
++     for item in items:
++         callback(item)
+
+# VALID - Fixing unused variable lint warning
+- result, err = do_something()
++ _, err = do_something()
+
+# VALID - Adding return type annotation
+- def get_user(id):
++ def get_user(id: int) -> User | None:
+```
+
+```typescript
+// VALID - TypeScript - Fixing type error
+- const value: string = maybeString; // Type error: possibly undefined
++ const value: string = maybeString ?? '';
+
+// VALID - Adding explicit type annotation
+- const users = [];
++ const users: User[] = [];
+
+// VALID - Fixing unused import lint error
+- import { useState, useEffect, useCallback } from 'react';
++ import { useState, useEffect } from 'react';
+```
+
+```go
+// VALID - Go - Fixing unused variable lint issue
+- result, err := doSomething()
++ _, err := doSomething()
+
+// VALID - Adding type constraint
+- func Process[T any](items []T) []T {
++ func Process[T comparable](items []T) []T {
+```
+
+**Anti-patterns (NOT valid type/lint fixes)**:
+
+- Type changes that affect runtime behavior (e.g., type guards that change control flow)
+- Lint fixes that require logic changes (not just annotation/declaration changes)
+- Adding `@ts-ignore`, `# type: ignore`, `//nolint`, or similar to suppress warnings
+- Changing type assertions that affect runtime casting behavior
+- Modifying generic constraints that change method resolution
+- Type changes that alter serialization/deserialization behavior
+
+---
+
+### 9. Add Unit Tests
+
+**Definition**: Purely adding new test coverage without modifying production source code. This includes adding new test files, new test cases to existing test files, and supporting test utilities.
+
+**Characteristics to detect**:
+
+- Adding new test files (e.g., `*.test.ts`, `*_test.go`, `test_*.py`)
+- Adding new test cases or test functions to existing test files
+- Adding test utilities, fixtures, mocks, or test helpers in test directories
+- No changes to production/source code (only test code)
+- Tests cover existing functionality (not tests for new features being added in the same PR)
+- Changes confined to test directories or test file patterns
+
+**Examples of valid unit test additions**:
+
+```python
+# VALID - Python - Adding new test file
+# test_user_service.py
++ import pytest
++ from services.user_service import UserService
++
++ class TestUserService:
++     def test_get_user_returns_user_when_exists(self):
++         service = UserService()
++         user = service.get_user(1)
++         assert user.id == 1
++
++     def test_get_user_returns_none_when_not_found(self):
++         service = UserService()
++         user = service.get_user(-1)
++         assert user is None
+```
+
+```typescript
+// VALID - TypeScript/Jest - Adding test cases to existing file
+describe('UserService', () => {
+  // existing tests...
+
++ it('should throw error when user not found', () => {
++   expect(() => service.getUser(-1)).toThrow(NotFoundError);
++ });
++
++ it('should return cached user on second call', () => {
++   service.getUser(1);
++   service.getUser(1);
++   expect(mockDb.query).toHaveBeenCalledTimes(1);
++ });
+});
+```
+
+```go
+// VALID - Go - Adding new test function
++ func TestUserService_GetUser_ReturnsUser(t *testing.T) {
++     service := NewUserService()
++     user, err := service.GetUser(1)
++     assert.NoError(t, err)
++     assert.Equal(t, 1, user.ID)
++ }
+```
+
+**Anti-patterns (NOT valid test additions)**:
+
+- Modifying existing test assertions or test logic
+- Adding tests alongside source code changes (that's feature work)
+- Deleting or disabling existing tests (`@skip`, `.skip()`, `pytest.mark.skip`)
+- Changing test configuration that affects other tests
+- Adding tests that require production code changes to pass
+- Modifying shared test fixtures in ways that affect existing tests
+
+---
+
+### 10. Add New Dependency
+
+**Definition**: Adding new packages/dependencies to the project manifest files without accompanying source code changes that use them.
+
+**Characteristics to detect**:
+
+- Adding new entries to dependency manifests (package.json, requirements.txt, go.mod, Cargo.toml, pom.xml, build.gradle, Gemfile)
+- Corresponding lockfile changes (package-lock.json, yarn.lock, poetry.lock, go.sum, Cargo.lock)
+- No source code changes that import or use the new dependency
+- New dependency is from a reputable source (well-known registry)
+
+**Examples of valid dependency additions**:
+
+```json
+// VALID - package.json - Adding new dependency
+{
+  "dependencies": {
++   "lodash": "^4.17.21"
+  },
+  "devDependencies": {
++   "jest": "^29.0.0"
+  }
+}
+```
+
+```txt
+# VALID - requirements.txt - Adding new package
++ requests==2.31.0
++ pydantic>=2.0.0
+```
+
+```go
+// VALID - go.mod - Adding new module
+module example.com/myapp
+
+go 1.21
+
+require (
+    github.com/gin-gonic/gin v1.9.1
++   github.com/stretchr/testify v1.8.4
+)
+```
+
+```toml
+# VALID - Cargo.toml - Adding new crate
+[dependencies]
+serde = "1.0"
++ tokio = { version = "1.0", features = ["full"] }
+```
+
+```xml
+<!-- VALID - pom.xml - Adding new dependency -->
+<dependencies>
++   <dependency>
++       <groupId>org.apache.commons</groupId>
++       <artifactId>commons-lang3</artifactId>
++       <version>3.12.0</version>
++   </dependency>
+</dependencies>
+```
+
+**Anti-patterns (NOT valid dependency additions)**:
+
+- Adding dependencies alongside source code that uses them (that's feature work)
+- Replacing existing dependencies with alternatives
+- Removing existing dependencies
+- Adding dependencies from untrusted or private sources without explanation
+- Adding dependencies with known security vulnerabilities
+- Changing dependency version ranges in ways that could introduce breaking changes
+
+---
+
 ## Analysis Instructions
 
 When analyzing a PR, follow these steps:
@@ -478,7 +790,7 @@ Not-eligible example:
 - **Look for hidden logic changes**: Variable renames might affect functionality, style changes might alter behavior
 - **Consider security**: Any changes to authentication, authorization, data validation, or API contracts should be marked NOT eligible
 - **File types matter**: Changes to configuration files, build scripts, or CI/CD pipelines are typically NOT eligible
-- **Test changes**: Adding/modifying tests is NOT eligible (even if it's just formatting tests)
+- **Test changes**: Only _purely adding_ new tests (without modifying production code or existing tests) is eligible under Category 9. Modifying existing tests or adding tests alongside feature work is NOT eligible
 - **Multiple categories**: Single-category PRs should receive the highest confidence. If a PR spans two or three categories (e.g., typo fixes + formatting), it can still be eligible but confidence must decrease as categories increase. More than three categories generally signals complexity—lean toward NOT eligible
 - **Dependency bumps**: Only clearly non-breaking (patch/minor) dependency version bumps with manifest/lockfile updates qualify; anything broader requires review
 - **Partial eligibility**: If 90% of changes are eligible but 10% involve logic, mark the entire PR as NOT eligible
@@ -491,6 +803,11 @@ Not-eligible example:
 4. **Formatting with logic changes**: If prettier formatted the file AND developer made logic changes - NOT eligible
 5. **Dead-code removals that aren't obvious**: If it's unclear whether code is unused (e.g., dynamic imports, reflection, indirect references), require review
 6. **Dependency updates beyond safe bumps**: Major-version upgrades, dependency additions/removals, or bumps that include source/config changes are NOT eligible
+7. **API field additions with security impact**: Adding fields that expose sensitive data (internal IDs, timestamps, user PII, system metadata) - mark as NOT eligible
+8. **Type fixes that change behavior**: Type guards, runtime type checks, or type assertions that affect control flow - NOT eligible
+9. **Test additions with source changes**: If a PR adds tests AND modifies production source code, it's feature work - NOT eligible
+10. **Dependency additions with usage**: If new dependency is added AND imported/used in source code within the same PR, it's feature work - NOT eligible
+11. **Internal rename vs exported**: If an identifier is renamed AND it's exported/public (could be used by external consumers), require review
 
 ## Remember
 
