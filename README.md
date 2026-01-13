@@ -78,10 +78,8 @@ concurrency:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    # Skip if already labeled or opened by a bot account
-    if: |
-      !contains(github.event.pull_request.labels.*.name, 'skip-review') &&
-      github.event.pull_request.user.type == 'User'  # Exclude bot-created PRs
+    # Skip if already labeled
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-review') }}
 
     permissions:
       contents: read
@@ -105,6 +103,7 @@ jobs:
 | `label_name`           | Label to apply when eligible              | No       | `skip-review` |
 | `max_diff_size`        | Maximum diff size in characters           | No       | `50000`       |
 | `add_comment`          | Add explanatory comment to PR             | No       | `true`        |
+| `skip_bot_prs`         | Skip analysis for bot-created PRs         | No       | `true`        |
 
 ### Example with All Options
 
@@ -118,6 +117,7 @@ jobs:
     label_name: auto-merge-eligible
     max_diff_size: 100000
     add_comment: true
+    skip_bot_prs: true
 ```
 
 ## Skip-Review Categories

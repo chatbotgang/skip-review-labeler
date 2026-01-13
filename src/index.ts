@@ -23,6 +23,7 @@ interface Config {
   maxDiffSize: number;
   addComment: boolean;
   openaiBaseUrl: string;
+  skipBotPrs: boolean;
 }
 
 function getConfig(): Config {
@@ -33,6 +34,7 @@ function getConfig(): Config {
     maxDiffSize: parseInt(process.env.INPUT_MAX_DIFF_SIZE || '50000', 10),
     addComment: process.env.INPUT_ADD_COMMENT !== 'false',
     openaiBaseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+    skipBotPrs: process.env.INPUT_SKIP_BOT_PRS !== 'false',
   };
 }
 
@@ -74,6 +76,10 @@ interface GitHubContext {
   event?: {
     pull_request?: {
       number: number;
+      user?: {
+        login: string;
+        type: string;
+      };
     };
   };
   repository?: string;
@@ -282,8 +288,19 @@ async function main(): Promise<void> {
     }
 
     const [owner, repo] = repository.split('/');
+    const prAuthor = context.event?.pull_request?.user;
 
     console.log(`Analyzing PR #${prNumber} in ${owner}/${repo}`);
+
+    // Check if PR is created by a bot
+    if (config.skipBotPrs && prAuthor?.type && prAuthor.type !== 'User') {
+      console.log(`Skipping analysis: PR created by ${prAuthor.type} account (${prAuthor.login})`);
+      setOutput('eligible', 'false');
+      setOutput('confidence', '0');
+      setOutput('category', 'none');
+      setOutput('reasoning', `Skipped: PR created by ${prAuthor.type} account`);
+      process.exit(0);
+    }
 
     const octokit = new Octokit({
       auth: process.env.GITHUB_TOKEN,
