@@ -785,7 +785,7 @@ Not-eligible example:
 4. **Formatting with logic changes**: If prettier formatted the file AND developer made logic changes - NOT eligible
 5. **Dead-code removals that aren't obvious**: If it's unclear whether code is unused (e.g., dynamic imports, reflection, indirect references), require review
 6. **Dependency updates beyond safe bumps**: Major-version upgrades, dependency additions/removals, or bumps that include source/config changes are NOT eligible
-7. **API field additions with security impact**: Adding fields that expose sensitive data (internal IDs, timestamps, user PII, system metadata) - mark as NOT eligible
+7. **API field additions**: Adding fields that expose data (internal IDs, timestamps, user PII, system metadata) - mark as NOT eligible
 8. **Type fixes that change behavior**: Type guards, runtime type checks, or type assertions that affect control flow - NOT eligible
 9. **Test additions with source changes**: If a PR adds tests AND modifies production source code, it's feature work - NOT eligible
 10. **Dependency additions with usage**: If new dependency is added AND imported/used in source code within the same PR, it's feature work - NOT eligible
