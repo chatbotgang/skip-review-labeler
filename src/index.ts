@@ -74,6 +74,10 @@ interface GitHubContext {
   event?: {
     pull_request?: {
       number: number;
+      user?: {
+        login: string;
+        type: string;
+      };
     };
   };
   repository?: string;
@@ -282,8 +286,19 @@ async function main(): Promise<void> {
     }
 
     const [owner, repo] = repository.split('/');
+    const prAuthor = context.event?.pull_request?.user;
 
     console.log(`Analyzing PR #${prNumber} in ${owner}/${repo}`);
+
+    // Only process PRs created by regular users (skip bots, apps, etc.)
+    if (prAuthor?.type && prAuthor.type !== 'User') {
+      console.log(`Skipping analysis: PR created by ${prAuthor.type} account (${prAuthor.login})`);
+      setOutput('eligible', 'false');
+      setOutput('confidence', '0');
+      setOutput('category', 'none');
+      setOutput('reasoning', `Skipped: PR created by ${prAuthor.type} account`);
+      process.exit(0);
+    }
 
     const octokit = new Octokit({
       auth: process.env.GITHUB_TOKEN,

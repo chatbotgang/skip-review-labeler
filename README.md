@@ -29,6 +29,7 @@ Code review is essential, but not all changes carry the same risk. Typo fixes, i
 - **Transparent Decisions** - Adds explanatory comments to labeled PRs
 - **Configurable** - Customize model, threshold, label name, and more
 - **Skip-Review Categories** - Detects typos, i18n updates, UI tweaks, formatting, unused-code cleanup, and safe dependency bumps
+- **User PRs Only** - Only analyzes PRs created by regular users (skips bots and apps)
 
 ## How It Works
 
@@ -78,10 +79,8 @@ concurrency:
 jobs:
   analyze:
     runs-on: ubuntu-latest
-    # Skip if already labeled or opened by a bot account
-    if: |
-      !contains(github.event.pull_request.labels.*.name, 'skip-review') &&
-      github.event.pull_request.user.type == 'User'  # Exclude bot-created PRs
+    # Skip if already labeled
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-review') }}
 
     permissions:
       contents: read
